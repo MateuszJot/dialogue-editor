@@ -1,24 +1,18 @@
+using System;
 using UnityEngine;
+using UnityEditor;
 
-namespace EFA.Dialogue {
-    
-    public class TextNode : EditorNode {
+public class TextNode : Node {
 
-        public TextNode(Rect r) {
-            this.myRect = r;
-            this.initialRect = new Rect(r);
-        }
+    public GUIStyle style;
 
-        public override void DrawNode(int id) {
+    public TextNode(Vector2 position, float width, float height) {
+        this.rect = new Rect(position.x, position.y, width, height);
+        style = DefaultStyle;
+        this.header = "Text";
+    }
 
-            myRect = GUI.Window(id, myRect, DrawWindow, "test");
-
-        }
-
-        private void DrawWindow(int windowID) {
-
-            GUI.DragWindow(new Rect(0, 0, myRect.width, myRect.height));
-
-        }
+    public override void Draw() {
+        GUI.Box(rect, header, style);
     }
 }
