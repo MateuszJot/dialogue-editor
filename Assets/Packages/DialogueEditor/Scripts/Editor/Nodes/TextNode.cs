@@ -14,8 +14,21 @@ public class TextNode : Node {
     }
 
     public override void Draw() {
+        GUI.Box(rect, string.Empty, CurrentNodeStyle);
+        GUILayout.BeginArea(rect);
+            DrawHeader();
+            DrawContent();
+        GUILayout.EndArea();
+
         inPoint.Draw();
         outPoint.Draw();
-        GUI.Box(rect, header, CurrentNodeStyle);
     }
+
+    public override void DrawInspectorContent() {
+        GUILayout.Label("Lorem ipsum");
+    }
+
+    private void DrawContent() {
+        GUILayout.Label("Lorem ipsum");
+    } 
 }

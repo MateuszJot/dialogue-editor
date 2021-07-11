@@ -9,6 +9,8 @@ public abstract class Node {
     public static GUIStyle defaultNodeStyle;
     public static GUIStyle selectedNodeStyle;
     public static GUIStyle connectionPointStyle;
+    public static GUIStyle defaultConnectionPointStyle;
+    public static GUIStyle headerStyle;
 
     private bool isBeingDragged;
     private bool isSelected;
@@ -31,7 +33,7 @@ public abstract class Node {
         get {
             if(defaultNodeStyle == null) {
                 defaultNodeStyle = new GUIStyle();
-                defaultNodeStyle.normal.background = (Texture2D) EditorGUIUtility.Load("builtin skins/darkskin/images/node2.png");
+                defaultNodeStyle.normal.background = (Texture2D) Resources.Load("Default Skin/node_background");
                 defaultNodeStyle.border = new RectOffset(10, 10, 10, 10);
             }
 
@@ -43,26 +45,38 @@ public abstract class Node {
         get {
             if(selectedNodeStyle == null) {
                 selectedNodeStyle = new GUIStyle(defaultNodeStyle);
-                selectedNodeStyle.normal.background = (Texture2D) EditorGUIUtility.Load("builtin skins/darkskin/images/node1.png");
+                selectedNodeStyle.normal.background = (Texture2D) Resources.Load("Default Skin/node_background_selected");
             }
 
             return selectedNodeStyle;
         }
     }
 
-    private GUIStyle defaultConnectionPointStyle = null;
     protected GUIStyle DefaultConnectionPointStyle {
         get {
             if(connectionPointStyle == null) {
                 connectionPointStyle = new GUIStyle();
-                connectionPointStyle.normal.background = 
-                    EditorGUIUtility.Load("builtin skins/darkskin/images/btn left.png") as Texture2D;
-                connectionPointStyle.active.background = 
-                    EditorGUIUtility.Load("builtin skins/darkskin/images/btn left on.png") as Texture2D;
+                connectionPointStyle.normal.background = (Texture2D) Resources.Load("Default Skin/node_background");
+                connectionPointStyle.active.background = (Texture2D) Resources.Load("Default Skin/node_background");
                 connectionPointStyle.border = new RectOffset(4, 4, 12, 12);
             }
 
             return connectionPointStyle;
+        }
+    }
+
+    protected GUIStyle HeaderStyle {
+        get {
+            if(headerStyle == null) {
+                headerStyle = new GUIStyle();
+                headerStyle.normal.background = (Texture2D) Resources.Load("Default Skin/node_background_dark");
+                headerStyle.normal.textColor = Color.white;
+                headerStyle.richText = true;
+                headerStyle.alignment = TextAnchor.MiddleCenter;
+                headerStyle.border = new RectOffset(4, 4, 12, 12);
+            }
+
+            return headerStyle;
         }
     }
 
@@ -71,7 +85,7 @@ public abstract class Node {
         rect.position += delta;
     }
 
-    public bool ManageEvents(Event e) {
+    public bool ManageEvents(Event e, DialogueEditorWindow editorWindow) {
 
         switch(e.type) {
             case EventType.MouseDown:
@@ -79,10 +93,13 @@ public abstract class Node {
                     if(rect.Contains(e.mousePosition)) {
                         isBeingDragged = true;
                         isSelected = true;
+                        editorWindow.selectedNode = this;
                         GUI.changed = true;
                     } else {
                         isSelected = false;
                         GUI.changed = true;
+                        if(editorWindow.selectedNode == this)
+                            editorWindow.selectedNode = null;
                     }
                 } else if (e.button == 1 && rect.Contains(e.mousePosition)) {
                     ProcessContextMenu();
@@ -107,6 +124,7 @@ public abstract class Node {
     }
 
     public abstract void Draw();
+    public abstract void DrawInspectorContent();
 
     protected virtual void ProcessContextMenu() {
         GenericMenu genericMenu = new GenericMenu();
@@ -122,4 +140,12 @@ public abstract class Node {
     public void Drag(Vector2 delta) {
         rect.position += delta;
     }
+
+    #region Universal GUI Drawers
+    protected void DrawHeader() {
+        GUILayout.BeginVertical();
+            GUILayout.Label("<b><size=15>" + header + "</size></b>", HeaderStyle);
+        GUILayout.EndVertical();
+    }
+    #endregion
 }
