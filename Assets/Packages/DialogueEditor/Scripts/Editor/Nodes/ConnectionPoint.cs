@@ -10,18 +10,30 @@ public class ConnectionPoint {
     public Node node;
     public GUIStyle style;
     public Action<ConnectionPoint> OnClickConnectionPoint;
+    public bool allowMultipleConnections = true;
     
+    private int connectionsAmount = 0;
+
+    public bool IsAlreadyConnected { get{ return connectionsAmount > 0; } }
+
     public ConnectionPoint(Node node, ConnectionPointType type, GUIStyle style, Action<ConnectionPoint> OnClickConnectionPoint) {
-        
         this.node = node;
         this.type = type;
         this.style = style;
         this.OnClickConnectionPoint = OnClickConnectionPoint;
         rect = new Rect(0, 0, 10f, 20f);
     }
+
+    public ConnectionPoint(Node node, ConnectionPointType type, GUIStyle style, Action<ConnectionPoint> OnClickConnectionPoint, bool allowMultipleConnections) {
+        this.node = node;
+        this.type = type;
+        this.style = style;
+        this.OnClickConnectionPoint = OnClickConnectionPoint;
+        this.allowMultipleConnections = allowMultipleConnections;
+        rect = new Rect(0, 0, 10f, 20f);
+    }
  
     public void Draw() {
-
         rect.y = node.rect.y + (node.rect.height * 0.5f) - rect.height * 0.5f;
  
         switch (type) {
@@ -38,5 +50,14 @@ public class ConnectionPoint {
                 OnClickConnectionPoint(this);
             }
         }
+    }
+
+    public void OnConnectionStart(Connection c) {
+        connectionsAmount++;
+        node.myConnections.Add(c);
+    }
+    public void OnConnectionStop(Connection c) {
+        connectionsAmount--;
+        node.myConnections.Remove(c);
     }
 }

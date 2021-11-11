@@ -18,8 +18,8 @@ public class Connection {
         Handles.DrawBezier(
             inPoint.rect.center,
             outPoint.rect.center,
-            inPoint.rect.center + Vector2.left * 50f,
-            outPoint.rect.center - Vector2.left * 50f,
+            inPoint.rect.center - Vector2.left * 50f,
+            outPoint.rect.center + Vector2.left * 50f,
             Color.white,
             null,
             2f

@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public class DialogueEditorWindow : EditorWindow {
 
-    public  Node selectedNode = null;
+    public Node selectedNode = null;
+    public Rect nodeInspector;
 
     private List<Node> nodes = new List<Node>();
     private List<Connection> nodesConnections = new List<Connection>();
@@ -54,9 +55,6 @@ public class DialogueEditorWindow : EditorWindow {
 
     private void OnGUI() {
 
-        ManageNodeEvents(Event.current);
-        ManageEvents(Event.current);
-
         DrawGrid(20, 0.2f, Color.gray);
         DrawGrid(100, 0.4f, Color.gray);
 
@@ -64,6 +62,9 @@ public class DialogueEditorWindow : EditorWindow {
         DrawPreviewConnectionLine(Event.current);
         DrawNodes();
         DrawNodeInspector();
+
+        ManageNodeEvents(Event.current);
+        ManageEvents(Event.current);
 
         if(GUI.changed)
             Repaint();
@@ -75,12 +76,13 @@ public class DialogueEditorWindow : EditorWindow {
             if(selectedNode == null)
                 return;
 
-            Rect r = new Rect(window.position.size.x - 502, 0, 500, window.position.size.y);
-            GUI.Box(r, string.Empty, DefaultWindowStyle);
+            nodeInspector = new Rect(window.position.size.x - 502, 0, 500, window.position.size.y);
+            GUI.Box(nodeInspector, string.Empty, DefaultWindowStyle);
 
-            GUILayout.BeginArea(r);
+            GUILayout.BeginArea(nodeInspector);
                 GUILayout.BeginVertical();
                     GUILayout.Label("<b><size=20>" + selectedNode.header + " Inspector" + "</size></b>", HeaderStyle);
+                    selectedNode.DrawInspectorContent();
                 GUILayout.EndVertical();
             GUILayout.EndArea();
         }
@@ -175,7 +177,7 @@ public class DialogueEditorWindow : EditorWindow {
                 break;
                 case EventType.MouseDrag:
                     if (e.button == 0) {
-                        OnDrag(e.delta);
+                        OnDrag(e.delta, e);
                     }
                 break;
             }
@@ -201,6 +203,35 @@ public class DialogueEditorWindow : EditorWindow {
 
             nodes.Add(new TextNode(mousePos, 200, 120, OnClickInPoint, OnClickOutPoint, OnClickRemoveNode));
         }
+    
+        private void CreateConnection(ConnectionPoint a, ConnectionPoint b) {
+
+            if (nodesConnections == null)
+                nodesConnections = new List<Connection>();
+
+            if(a == b)
+                return;
+
+            if(!a.allowMultipleConnections && a.IsAlreadyConnected)
+                return;
+
+            if(!b.allowMultipleConnections && b.IsAlreadyConnected)
+                return;
+
+            Connection newConnection = new Connection(a, b, OnClickRemoveConnection);
+            if(nodesConnections.Contains(newConnection))
+                return;
+            
+            a.OnConnectionStart(newConnection);
+            b.OnConnectionStart(newConnection);
+            nodesConnections.Add(newConnection);
+            GUI.changed = true;
+        }
+    
+        private void ClearConnectionSelection() {
+            selectedInPoint = null;
+            selectedOutPoint = null;
+        }
 
         private void OnClickInPoint(ConnectionPoint inPoint) {
 
@@ -210,7 +241,7 @@ public class DialogueEditorWindow : EditorWindow {
                 return;
 
             if (selectedOutPoint.node != selectedInPoint.node) {
-                CreateConnection();
+                CreateConnection(selectedOutPoint, selectedInPoint);
                 ClearConnectionSelection(); 
             } else {
                 ClearConnectionSelection();
@@ -225,28 +256,11 @@ public class DialogueEditorWindow : EditorWindow {
                 return;
 
             if (selectedOutPoint.node != selectedInPoint.node) {
-                CreateConnection();
+                CreateConnection(selectedOutPoint, selectedInPoint);
                 ClearConnectionSelection();
             } else {
                 ClearConnectionSelection();
             }
-        }
-
-        private void OnClickRemoveConnection(Connection connection) {
-            nodesConnections.Remove(connection);
-        }
-    
-        private void CreateConnection() {
-            if (nodesConnections == null)
-                nodesConnections = new List<Connection>();
-    
-            nodesConnections.Add(new Connection(selectedInPoint, selectedOutPoint, OnClickRemoveConnection));
-            GUI.changed = true;
-        }
-    
-        private void ClearConnectionSelection() {
-            selectedInPoint = null;
-            selectedOutPoint = null;
         }
 
         private void OnClickRemoveNode(Node node) {
@@ -254,23 +268,24 @@ public class DialogueEditorWindow : EditorWindow {
             if(nodesConnections == null)
                 return;
 
-            List<Connection> connectionsToRemove = new List<Connection>();
-    
-            for (int i = 0; i < nodesConnections.Count; i++) {
-                if (nodesConnections[i].inPoint == node.inPoint || nodesConnections[i].outPoint == node.outPoint) {
-                    connectionsToRemove.Add(nodesConnections[i]);
-                }
-            }
-    
-            for (int i = 0; i < connectionsToRemove.Count; i++) {
-                nodesConnections.Remove(connectionsToRemove[i]);
-            }
-    
-            connectionsToRemove = null;
+            for (int i = 0; i < node.myConnections.Count; i++)
+                nodesConnections.Remove(node.myConnections[i]);
+
+            if(selectedNode == node)
+                selectedNode = null;
             nodes.Remove(node);
         }
 
-        private void OnDrag(Vector2 delta) {
+        private void OnClickRemoveConnection(Connection connection) {
+            connection.inPoint.OnConnectionStop(connection);
+            connection.outPoint.OnConnectionStop(connection);
+            nodesConnections.Remove(connection);
+        }
+
+        private void OnDrag(Vector2 delta, Event e) {
+
+            if(nodeInspector.Contains(e.mousePosition))
+                return;
 
             dragDelta = delta;
     

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -19,6 +20,7 @@ public abstract class Node {
     public ConnectionPoint outPoint;
 
     public Action<Node> OnRemoveNode;
+    public List<Connection> myConnections = new List<Connection>();
     
     protected GUIStyle CurrentNodeStyle {
         get {
@@ -98,8 +100,9 @@ public abstract class Node {
                     } else {
                         isSelected = false;
                         GUI.changed = true;
-                        if(editorWindow.selectedNode == this)
-                            editorWindow.selectedNode = null;
+                        if(editorWindow.selectedNode == this 
+                        && !editorWindow.nodeInspector.Contains(e.mousePosition))
+                                 editorWindow.selectedNode = null;
                     }
                 } else if (e.button == 1 && rect.Contains(e.mousePosition)) {
                     ProcessContextMenu();
