@@ -4,6 +4,10 @@ using UnityEditor;
 
 public class TextNode : Node {
 
+    public string value { get; private set; } = string.Empty;
+    public string valuePreview { get; private set; } = string.Empty;
+    public DialogueEditorCustomParameters customParameters { get; private set; } = new DialogueEditorCustomParameters();
+
     public TextNode(Vector2 position, float width, float height, Action<ConnectionPoint> OnClickInPoint, 
                                 Action <ConnectionPoint> OnClickOutPoint, Action<Node> OnClickRemoveNode) {
         this.rect = new Rect(position.x, position.y, width, height);
@@ -25,10 +29,21 @@ public class TextNode : Node {
     }
 
     public override void DrawInspectorContent() {
-        GUILayout.Label("Lorem ipsum");
+        GUILayout.Label("Dialogue:");
+        value = GUILayout.TextArea(value);
+        GUILayout.Label("Dialogue Preview:");
+        valuePreview = GUILayout.TextField(valuePreview);
+        GUILayout.Label("Custom Properties:");
+        customParameters.Draw();
     }
 
     private void DrawContent() {
-        GUILayout.Label("Lorem ipsum");
+        if(valuePreview == string.Empty)
+            if(value == string.Empty)
+                GUILayout.Label("Empty text node...");
+            else
+                GUILayout.Label(value);
+        else
+            GUILayout.Label(valuePreview);
     } 
 }

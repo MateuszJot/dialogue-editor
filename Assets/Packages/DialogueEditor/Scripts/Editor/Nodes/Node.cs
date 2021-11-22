@@ -82,11 +82,6 @@ public abstract class Node {
         }
     }
 
-    public void Move(Vector2 delta) {
-
-        rect.position += delta;
-    }
-
     public bool ManageEvents(Event e, DialogueEditorWindow editorWindow) {
 
         switch(e.type) {
@@ -96,6 +91,7 @@ public abstract class Node {
                         isBeingDragged = true;
                         isSelected = true;
                         editorWindow.selectedNode = this;
+                        GUI.FocusControl(null);
                         GUI.changed = true;
                     } else {
                         isSelected = false;
@@ -116,7 +112,7 @@ public abstract class Node {
  
             case EventType.MouseDrag:
                 if(e.button == 0 && isBeingDragged) {
-                    Move(e.delta);
+                    Move(e);
                     e.Use();
                     return true;
                 }
@@ -142,6 +138,23 @@ public abstract class Node {
 
     public void Drag(Vector2 delta) {
         rect.position += delta;
+    }
+
+    public void Move(Event e) {
+
+        ///TODO: Dedcide when round to grid!!!
+        /// Custom input system in dialogue editor
+        bool roundToGrid = false;
+
+        if(!roundToGrid) {
+            rect.position += e.delta;
+        } else {
+            rect.position = new Vector2(SnapValue(e.mousePosition.x), SnapValue(e.mousePosition.y));
+        }
+    }
+
+    private float SnapValue(float val, float snapSize = 20f) {
+       return snapSize * Mathf.Round((val / snapSize));
     }
 
     #region Universal GUI Drawers
